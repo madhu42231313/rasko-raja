@@ -1,3 +1,47 @@
-
 <h3 style="color:blue;margin-left: 100px;">Rasko Raja</h3>
-<div contenteditable="true" id="aa" (keyup)="onKeyUp($event)" class="editable"></div>
+
+<!-- Headline Generator -->
+
+<div *ngIf="viewComp=='Headline'" class="container">
+    <!-- Headline input -->
+    <div> 
+        <div class="row row-align">
+            <div>Keywords</div>
+        </div>
+        <div class="row row-align">
+            <input type="text" class="keyword-input" placeholder="Enter key words with comma separated" [(ngModel)]="headlineObject.keywords" />
+        </div>
+        <div class="row row-align">
+            <button *ngIf="!headlineObject.generatedHeadlines.length"
+             type="button" class="btn btn-primary" (click)="onGenrateHeadline('NEW')" [disabled]="headlineObject.spin">
+               <span *ngIf="!headlineObject.spin"> Generate Headlines</span>
+               <span *ngIf="headlineObject.spin">Generating... <i class="fa fa-spinner"></i></span>
+            </button>
+        </div>
+    </div>
+    <!-- Headline results -->
+    <div *ngFor="let headline of headlineObject.generatedHeadlines;let i = index">
+        <div class="row" *ngIf="i % 2 == 0">
+            <div class="col-6" (click)="onChecked(i)" >{{headline.text}}<span><input type="checkbox" [checked]="headline.checked" /></span></div>
+            <div class="col-6" (click)="onChecked(i+1)" *ngIf="i + 1 < headlineObject.generatedHeadlines.length">
+                {{headlineObject.generatedHeadlines[i+1].text}}
+                <span><input type="checkbox" [checked]="headlineObject.generatedHeadlines[i+1].checked" /></span></div>
+        </div>
+    </div>
+    <div class="row row-align">
+        <button *ngIf="headlineObject.showGenerateMore"
+         type="button" class="btn btn-primary" (click)="onGenrateHeadline('MORE')" [disabled]="headlineObject.spin">
+           <span *ngIf="!headlineObject.spin"> Generate more</span>
+           <span *ngIf="headlineObject.spin">Generating... <i class="fa fa-spinner"></i></span>
+        </button>
+    </div>
+    <br/>
+    <div class="row"><h3>Prompt:</h3></div>
+    <div class="row">{{prompt}}</div>
+</div>
+<!-- -o- Headline Generator -o- -->
+
+<!-- Main Section -->
+<div *ngIf="viewComp=='MainSection'">
+    <div contenteditable="true" id="aa" (keyup)="onKeyUp($event)" class="editable"></div>
+</div>
