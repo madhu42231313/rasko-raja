@@ -1,0 +1,3 @@
+let res = {"id": "cmpl-2Sm5n00sSzHGS1oEHwsMYSmC4vClr", "object": "text_completion", "created": 1613210727, "model": "davinci:2020-05-03", "choices": [{"text": " \n10 Valentine's Day Gift Ideas for Your Boyfriend\n2. \nValentine's Day Gift Ideas: For the Man in Your Life!\n3. \tTop 10 Valentine's Gifts for Him (That Are Not Clothes)\n4. \tValentine's Day Gift Guide \u2013 What to Buy Her! #GiftIdeas #RomanticWeekendPlanningTips #LoveAndRelationshipsAdvice\n\n", "index": 0, "logprobs": null, "finish_reason": "stop"}]}
+
+let desc = ' There is no better valentine gift for your lover on the most romantic day of the year than a beautiful floral arrangement. Women especially cherish flowers.'

@@ -3,7 +3,8 @@ import { Observable, Subject,Subscription } from 'rxjs';
 import { debounceTime, } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PromptUtilities } from "src/app/gpt3/utilities/promptUtilities"
-
+import { optionObject } from "src/app/gpt3/utilities/promptUtilities"
+import { AngularEditorConfig } from '@kolkov/angular-editor'
 
 
 
@@ -16,7 +17,7 @@ export class Gpt3Component implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) { }
 
   subject: Subject<any> = new Subject();
@@ -50,33 +51,240 @@ export class Gpt3Component implements OnInit {
     presencePenalty: 1,
     stop: '↵↵'
   }
+  introOptions = {
+    engine: 'davinci',
+    key: this.key,
+    temperature: 0.75,
+    topP: 1,
+    bestOf: 1,
+    maxTokens: 300,
+    echo: false,
+    stream: false,
+    frequencyPenalty: 1,
+    presencePenalty: 1,
+    stop: '↵↵'
+  }
   configOptionsObject ={
     finalOptions: this.finalOptions,
-    healineOptions: this.headlineConfigOptions
+    healineOptions: this.headlineConfigOptions,
+    introOptions: this.introOptions
   }
 
   initialHeadlinePrompt: string = ''
+  initialIntroPrompt: string =''
   apiCallSubscribe : Subscription = new Subscription();
-  viewComp: string = 'Headline'
+  viewComp: string = 'HEADLINE'
   headlineObject: any = {
     keywords:"",
     spin:false,
     generatedHeadlines: [],
     selectedHeadlines:[],
     showGenerateMore: false,
+    keyWordErr: false,
+    keywordErrMsg: "",
+    showContinue: false
+  }
+  introObject:any = {
+    description:"",
+    spin:false,
+    disable:true,
+    generatedIntros:[],
+    selectedIntros:[],
+    showGenerateMore: false,
+    showContinue: false,
+    filteredIntroList: []
   }
   promptUtilities: PromptUtilities = new PromptUtilities()
-  completionUrl: string = `https://api.openai.com/v1/engines/${this.finalOptions.engine}/completions`
-
+  completionUrl: string = `https://api.openai.com/v1/engines/${this.finalOptions.engine}/completions`;
+  
+  editorContent: string = ""
+  editorConfig: AngularEditorConfig = {
+    editable: true,
+      spellcheck: true,
+      height: 'auto',
+      minHeight: '100',
+      maxHeight: 'auto',
+      width: 'auto',
+      minWidth: '50%',
+      translate: 'yes',
+      enableToolbar: true,
+      showToolbar: true,
+      placeholder: 'Enter text here...',
+      defaultParagraphSeparator: '',
+      defaultFontName: '',
+      defaultFontSize: '',
+      fonts: [
+        {class: 'arial', name: 'Arial'},
+        {class: 'times-new-roman', name: 'Times New Roman'},
+        {class: 'calibri', name: 'Calibri'},
+        {class: 'comic-sans-ms', name: 'Comic Sans MS'}
+      ],
+      customClasses: [
+      {
+        name: 'quote',
+        class: 'quote',
+      },
+      {
+        name: 'redText',
+        class: 'redText'
+      },
+      {
+        name: 'titleText',
+        class: 'titleText',
+        tag: 'h1',
+      },
+    ],
+    uploadUrl: 'v1/image',
+    uploadWithCredentials: false,
+    sanitize: true,
+    toolbarPosition: 'top',
+    toolbarHiddenButtons: []
+};
   ngOnInit(): void {
+    // this.updateViewComp('COPY')
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {
         this.doAction(event)
       })
   }
-  // onKeyUp(event:any){
-  //   console.log(event);
-  // }
+  validateKeywords = () =>{
+    let keywordList = this.headlineObject.keywords.split(',')
+
+    if(!keywordList.length) return false;
+
+    if(keywordList.length > 5){
+      this.headlineObject.keywordErrMsg = "Max 5 keywords will be allowed"
+      this.headlineObject.keyWordErr = true;
+      return false;
+    }
+    else if(keywordList.length < 2){
+      this.headlineObject.keywordErrMsg = "Please enter atleast two keywords"
+      this.headlineObject.keyWordErr = true;
+      return false
+    }else{
+      this.headlineObject.keyWordErr = false;
+      return true;
+    }
+  }
+  detectChanges = () =>{
+    this.cdr.detectChanges()
+  }
+
+  renderIntroList = (introList:optionObject[]) =>{
+      this.introObject.spin = false;
+      this.introObject.generatedIntros = introList
+      this.detectChanges()
+  }
+  performIntroGen = (prompt: string) => {
+    // Generate Intros first
+      this.generateIntro(prompt)
+      .then((res:any) => {
+        this.validateGeneratedIntros(res)
+        .then((validatedRes:any)=>{
+          let introList: optionObject[] = this.introObject.filteredIntroList
+            if(validatedRes && validatedRes.length){
+              introList = introList.concat(validatedRes)
+              this.introObject.filteredIntroList = [...introList]
+            }
+            if(introList.length >= 2){
+              this.renderIntroList(introList)
+            }else{
+              this.onGenerateIntro('NEW')
+            }
+        })
+        .catch((e)=>{
+          this.introObject.spin = false
+          console.error(e)
+        })
+      }).catch((e) =>{
+        this.introObject.spin = false
+        console.error(e)
+        /// show an alert if need
+      })
+  }
+
+  onGenerateIntro = (type: string) => {
+    this.introObject.spin = true
+    if(type == 'NEW'){
+      let prompt = this.promptUtilities.introSummaryPrompt
+      let headline = this.headlineObject.selectedHeadlines[0]
+      let description = this.introObject.description
+      prompt = prompt.replace('##HEADLINE##', headline.text)
+      prompt = prompt.replace('##DESCRIPTION##', description)
+      this.performIntroGen(prompt)
+    }
+    else if(type == 'MORE'){
+      let prompt = this.initialIntroPrompt
+      let selectedIntros = this.introObject.selectedIntros
+      selectedIntros.forEach((i: any, index: any) => {
+          let sNo = ++index
+          prompt = prompt + '\n' + sNo + '. ' + i.text
+        })
+        console.log('promptt ', prompt)
+      this.performIntroGen(prompt)
+
+    }
+  }
+  generateIntro = (prompt: string) => {
+    return new Promise((resolve, reject) => {
+      let options: any = this.getConfigOptions('INTRO')
+      options['prompt'] = prompt
+      let generatedIntros: optionObject[] = []
+      if (this.apiCallSubscribe) { this.apiCallSubscribe.unsubscribe(); }
+      this.apiCallSubscribe = this.hitOpenAI(options).subscribe((response: any) => {
+        console.log('response', response)
+        // this.introObject.spin = false
+        if (response && response.choices) {
+          let choices = response.choices[0].text && response.choices[0].text.split('Introduction #')
+            .filter((e: string) => { return e.length })
+          //  console.log('before map --> ',choices)
+          choices = choices.map((intro: string) => {
+            intro = intro.trim()
+            let format = intro.charAt(1) == ':' ? intro.split(':')[1] : intro
+            console.log('format ', format)
+            return format
+          })
+          //  console.log('after map --> ',choices)
+          choices.forEach((e: any, index: number) => {
+            if (e.length) {
+              let intro: any = {
+                text: e,
+                checked: false
+              }
+              generatedIntros.push(intro)
+            }
+          })
+          console.log('introObject => ', generatedIntros)
+          resolve(generatedIntros)
+          this.detectChanges();
+        }
+      }, (error) => {
+        this.introObject.spin = false
+        reject([])
+        console.log("error => ", error)
+      })
+    })
+  }
+
+  validateGeneratedIntros = (generatedIntros: optionObject[]) => {
+    return new Promise((resolve, reject) => {
+      if (generatedIntros && generatedIntros.length) {
+        let isValid = true
+        let minIntroLen = 30
+        let filterWithLength = generatedIntros.filter((i) => {return i.text.length >= minIntroLen })
+        if(filterWithLength.length){
+          resolve(filterWithLength)
+        }else{
+          resolve([])
+        }
+      } else {
+        this.onGenerateIntro('NEW')
+      }
+    })
+  }
+  onDescEnter = () => {
+    this.introObject.disable = this.introObject.description.length < 50
+  }
 
   onKeyUp(event: any) {
     if(this.apiCallSubscribe){this.apiCallSubscribe.unsubscribe()}
@@ -101,6 +309,9 @@ export class Gpt3Component implements OnInit {
       case 'HEADLINE': 
             opts = { ...this.configOptionsObject.healineOptions }
             break
+      case 'INTRO': 
+            opts = { ...this.configOptionsObject.introOptions }
+            break
       default: 
             opts = { ...this.configOptionsObject.finalOptions }
     }
@@ -120,6 +331,34 @@ export class Gpt3Component implements OnInit {
     );
 
     return data;
+  }
+  updateViewComp = (val: string) => {
+    this.viewComp = val;
+    // if(val == 'COPY') this.updateInitialCopyData()
+  }
+  continueToIntroGen = () => {
+    this.updateViewComp('INTRO')
+  }
+  continueToCopy = () =>{
+    let headline = this.headlineObject.selectedHeadlines[0]
+    let intro = this.introObject.selectedIntros[0]
+    let desc = this.introObject.description
+    let editorString = `<h2> ${headline.text} </h2> 
+                        <br><br> 
+                        <h3> ${desc} </h3>
+                        <br>
+                        <p> ${intro.text} </p> <br>`
+    this.editorContent = editorString;
+    this.updateViewComp('COPY')
+    // this.updateInitialCopyData()
+
+  }
+
+  updateInitialCopyData = () => {
+    let element: any = document.getElementById('aa');
+    console.log('element ==> ', element.innerText);
+    let intro = this.introObject.selectedIntros[0]
+    element.innerText = intro;
   }
 
   doAction(event: any): void {
@@ -147,7 +386,7 @@ export class Gpt3Component implements OnInit {
           })
 
           element.innerText = inputText + resultText;
-          this.cdr.detectChanges();
+          this.detectChanges();
         }
       })
 
@@ -223,40 +462,41 @@ export class Gpt3Component implements OnInit {
     }
   }
   onGenrateHeadline = (type: string) => {
-    console.log('keywords ',this.headlineObject.keywords)
-    this.headlineObject.spin = true;
-    if (type == 'NEW') {
-      let keywords = this.headlineObject.keywords && this.headlineObject.keywords.split(',')
-      let promptText = this.promptUtilities.headlinePromptV1
-      if (keywords.length == 1) {
+    console.log('keywords ', this.headlineObject.keywords)
+    let isValid = this.validateKeywords()
+    if (isValid) {
+      this.headlineObject.spin = true;
+      if (type == 'NEW') {
+        let keywords = this.headlineObject.keywords && this.headlineObject.keywords.split(',')
+        let promptText = this.promptUtilities.headlinePromptV1
         promptText = promptText.replace('##NUMOF##', '5')
-        promptText = promptText.replace('##KEYWORD1##', keywords[0])
-        promptText = promptText + '\n 1.'
-        console.log('promptt ', promptText)
-        this.initialHeadlinePrompt = promptText
-        this.generateHeadlines(promptText)
+        if (keywords.length) {
+          promptText = promptText.replace('##KEYWORD1##', keywords[0])
+          if (keywords.length > 1) {
+            let extendPromptText = this.promptUtilities.headlinePromptV1Extend
+            for (let i = 1; i < keywords.length; i++) {
+              let p = extendPromptText
+              p = p.replace('##KEYWORD##', keywords[i])
+              promptText = promptText + ' ' + p
+            }
+          }
+          this.initialHeadlinePrompt = promptText;
+          promptText = promptText + '\n 1.'
+          console.log('prompt ', promptText)
+          this.generateHeadlines(promptText)
+        }
       }
-      else if (keywords.length == 2) {
-        promptText = promptText + this.promptUtilities.headlinePromptV1Extend
-        promptText = promptText.replace('##NUMOF##', '5')
-        promptText = promptText.replace('##KEYWORD1##', keywords[0])
-        promptText = promptText.replace('##KEYWORD2##', keywords[1])
-        promptText = promptText + '\n 1.'
+      else if (type == 'MORE') {
+        let promptText = this.initialHeadlinePrompt
+        let selectedHeadlines = this.headlineObject.selectedHeadlines
+        selectedHeadlines.forEach((h: any, index: any) => {
+          let sNo = ++index
+          promptText = promptText + '\n' + sNo + '. ' + h.text
+        })
         console.log('promptt ', promptText)
-        this.initialHeadlinePrompt = promptText
-        this.generateHeadlines(promptText)
+        // this.generateHeadlines(promptText)
       }
     }
-    else if(type == 'MORE'){
-      let promptText = this.initialHeadlinePrompt
-      let selectedHeadlines = this.headlineObject.selectedHeadlines
-      selectedHeadlines.forEach((h:any, index:any) => {
-        promptText = index == 0 ? promptText + h.text.split('.')[1] :  promptText + '\n '+ (index+1) + '. ' + h.text.split('.')[1]
-      })
-      console.log('promptt ', promptText)
-      this.generateHeadlines(promptText)
-    }
-    
   }
 
   generateHeadlines = (promptText: string) => {
@@ -268,17 +508,24 @@ export class Gpt3Component implements OnInit {
        this.headlineObject.spin = false
        if(response && response.choices){
          let choices = response.choices[0].text && response.choices[0].text.split('\n')
+                      .filter( (e:string) => {return e.length})
+        //  console.log('before map --> ',choices)
+         choices = choices.map((head: string) => {
+           let splitArray = head.split('.')
+           return splitArray.length > 1 ? splitArray[1] : splitArray[0]
+          })
+        //  console.log('after map --> ',choices)
         choices.forEach((e:any, index:number)=> {
           if(e.length){
             let headline:any = {
-              text:index === 0 ? '1. ' +  e : e,
+              text: e,
               checked:false
             }
             this.headlineObject.generatedHeadlines.push(headline)
           }
         })
         console.log('headlineObject => ',this.headlineObject)
-        this.cdr.detectChanges();
+        this.detectChanges();
       }
       },(error)=>{
         console.log('error in generateHeadlines ',error)
@@ -293,7 +540,15 @@ export class Gpt3Component implements OnInit {
     this.headlineObject.generatedHeadlines[index].checked = !this.headlineObject.generatedHeadlines[index].checked
     this.headlineObject.selectedHeadlines = this.headlineObject.generatedHeadlines.filter((h:any) => {return h.checked})
     this.headlineObject.showGenerateMore = this.headlineObject.selectedHeadlines.length > 0
+    this.headlineObject.showContinue = this.headlineObject.selectedHeadlines.length === 1
     console.log('checked ',this.headlineObject)
+  }
+  onIntroChecked = (index:number) =>{
+    this.introObject.generatedIntros[index].checked = !this.introObject.generatedIntros[index].checked
+    this.introObject.selectedIntros = this.introObject.generatedIntros.filter((h:any) => {return h.checked})
+    this.introObject.showGenerateMore = this.introObject.selectedIntros.length > 0
+    this.introObject.showContinue = this.introObject.selectedIntros.length === 1
+    console.log('checked ',this.introObject)
   }
 
   hitOpenAI = (options:any) :Observable<any> => {
