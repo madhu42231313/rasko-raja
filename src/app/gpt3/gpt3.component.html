@@ -117,9 +117,15 @@
     <!-- <div contenteditable="true" id="aa" (keyup)="onKeyUp($event)" class="editable"></div> -->
     <div class="row row-align">
         <div class="col-9">
-            <angular-editor [placeholder]="'Enter text here...'" [config]="editorConfig" [(ngModel)]="editorContent">
+            <angular-editor  [placeholder]="'Enter text here...'" [config]="editorConfig" [(ngModel)]="editorContent">
             </angular-editor>
         </div>
+    </div>
+    <div class="row row-align">
+        <button class="btn btn-primary margin-left-15" (click)="onCopySubmit()" [disabled]="copyObject.spin" >
+            <span *ngIf="!copyObject.spin">Submit</span>
+            <span *ngIf="copyObject.spin">Generating..</span>
+        </button>
     </div>
 </div>
 

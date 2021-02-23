@@ -4,7 +4,7 @@ import { debounceTime, } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PromptUtilities } from "src/app/gpt3/utilities/promptUtilities"
 import { optionObject } from "src/app/gpt3/utilities/promptUtilities"
-import { AngularEditorConfig } from '@kolkov/angular-editor'
+import { AngularEditorConfig } from '@kolkov/angular-editor';
 
 
 
@@ -14,6 +14,8 @@ import { AngularEditorConfig } from '@kolkov/angular-editor'
   styleUrls: ['./gpt3.component.scss']
 })
 export class Gpt3Component implements OnInit {
+
+
 
   constructor(
     private http: HttpClient,
@@ -30,11 +32,11 @@ export class Gpt3Component implements OnInit {
     temperature: 0.9,
     topP: 1,
     bestOf: 1,
-    maxTokens: 100,
+    maxTokens: 300,
     echo: false,
     stream: false,
-    frequencyPenalty: 1,
-    presencePenalty: 1,
+    frequencyPenalty: 0.51,
+    presencePenalty: 0.6,
     stop: '↵↵'
 
   }
@@ -105,7 +107,7 @@ export class Gpt3Component implements OnInit {
       minHeight: '100',
       maxHeight: 'auto',
       width: 'auto',
-      minWidth: '50%',
+      minWidth: 'auto',
       translate: 'yes',
       enableToolbar: true,
       showToolbar: true,
@@ -140,11 +142,16 @@ export class Gpt3Component implements OnInit {
     toolbarPosition: 'top',
     toolbarHiddenButtons: []
 };
+copyObject = {
+  spin: false,
+  viewContent: "",
+  textContent:""
+}
   ngOnInit(): void {
     // this.updateViewComp('COPY')
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {
-        this.doAction(event)
+        this.doAction()
       })
   }
   validateKeywords = () =>{
@@ -290,6 +297,14 @@ export class Gpt3Component implements OnInit {
     if(this.apiCallSubscribe){this.apiCallSubscribe.unsubscribe()}
     this.subject.next(event);
   }
+  onCopySubmit = ()=>{
+    console.log('editor content ',this.editorContent)
+      this.doAction()
+  }
+  onHtml(event: any){
+    console.log("on html ",event)
+    // this.html.emit(event)
+  }
 
   _construct_parameter(name: any, value: any) {
     return (typeof value === 'undefined' || value === null) ? null : { [name]: value };
@@ -340,15 +355,18 @@ export class Gpt3Component implements OnInit {
     this.updateViewComp('INTRO')
   }
   continueToCopy = () =>{
-    let headline = this.headlineObject.selectedHeadlines[0]
-    let intro = this.introObject.selectedIntros[0]
+    let headline = this.headlineObject.selectedHeadlines[0].text
+    let intro = this.introObject.selectedIntros[0].text
     let desc = this.introObject.description
-    let editorString = `<h2> ${headline.text} </h2> 
+    let originalText = `${headline} \n\n ${desc} \n ${intro} \n`;
+    this.copyObject.textContent = originalText;
+    let editorString = `<h2> ${headline} </h2> 
                         <br><br> 
                         <h3> ${desc} </h3>
                         <br>
-                        <p> ${intro.text} </p> <br>`
+                        <p> ${intro} </p> <br>`
     this.editorContent = editorString;
+    // this.copyObject.viewContent = 
     this.updateViewComp('COPY')
     // this.updateInitialCopyData()
 
@@ -360,22 +378,38 @@ export class Gpt3Component implements OnInit {
     let intro = this.introObject.selectedIntros[0]
     element.innerText = intro;
   }
+  
+  removeHtmlTags = (inStr: string) => {
+    let formattedStr = inStr
+    formattedStr = this.replaceAll(inStr,'<br>',"\n");
+    formattedStr = formattedStr.replace( /(<([^>]+)>)/ig, '');
+    console.log('formatted string ',formattedStr)
+    return formattedStr;
+  }
+  replaceAll = (string: string, search: string, replace: string) => {
+    return string.split(search).join(replace);
+  }
 
-  doAction(event: any): void {
+  doAction(): void {
 
     // if (event.keyCode == 37 || event.keyCode == 38 || event.keyCode == 39 || event.keyCode == 40) return;
-    let element: any = document.getElementById('aa');
-    console.log('element ==> ', element.innerText)
-    let inputText: string = element.innerText
+    this.copyObject.spin = true
+    // let element: any = document.getElementById('aa');
+    // console.log('element ==> ', element.innerText)
+    // let inputText: string = element.innerText
+    this.copyObject.viewContent = this.editorContent
+    let inputText: string = this.editorContent
+    inputText = this.removeHtmlTags(inputText)
     inputText = inputText.trim();
     let isValid = this.validateInput(inputText)
     if (isValid) {
       console.log('valid inputText')
       const url = this.completionUrl
       
-      
+  
    let data = this.getConfigOptions('MAIN')
    data['prompt'] = inputText
+   console.log('copy prompt ',inputText)
     if(this.apiCallSubscribe){this.apiCallSubscribe.unsubscribe();}
      this.apiCallSubscribe = this.hitOpenAI(data).subscribe((response: any) => {
         console.log('response', response)
@@ -385,7 +419,9 @@ export class Gpt3Component implements OnInit {
               resultText += e.text
           })
 
-          element.innerText = inputText + resultText;
+          // element.innerText = inputText + resultText;
+          this.editorContent = this.copyObject.viewContent + resultText;
+          this.copyObject.spin = false
           this.detectChanges();
         }
       })
