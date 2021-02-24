@@ -32,7 +32,7 @@ export class Gpt3Component implements OnInit {
     temperature: 0.9,
     topP: 1,
     bestOf: 1,
-    maxTokens: 300,
+    maxTokens: 150,
     echo: false,
     stream: false,
     frequencyPenalty: 0.51,
