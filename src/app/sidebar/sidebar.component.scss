@@ -1,0 +1,21 @@
+.sidebar-txtcolor {
+    color: #dadde2;
+}
+.sidebar-list {
+    list-style: none;
+    margin-top: 8rem;
+    padding-left: 0;
+    padding: 30px;
+}
+.sidebar-list > li {
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.li-selected {
+    background: black;
+    color: white;
+}
+.w-60p {
+    width: 60%;
+}

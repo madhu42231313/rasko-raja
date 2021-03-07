@@ -1,0 +1,45 @@
+<div class="d-flex vh-100">
+    <div class="sidebar">
+        <app-sidebar (selectedItemEvent)="selectedItem($event)"></app-sidebar>
+    </div>
+    <div class="main-content">
+        <div class='main-content-box' [ngSwitch]="selectedItemName">
+            <div *ngSwitchCase="'home'">
+                <ng-container *ngTemplateOutlet="homeTemplate">
+                </ng-container>
+            </div>
+            <div *ngSwitchCase="'contact'">
+                <ng-container *ngTemplateOutlet="contactTemplate">
+                </ng-container>
+            </div>
+            <div *ngSwitchDefault>Please select one from list.</div>
+        </div>
+    </div>
+</div>
+
+<ng-template #homeTemplate>
+    <div class="p-4">
+        <span class="header-txt">What do you want to write today?</span><br>
+        <span class="subtxt">Let your AI assistant know clearly about what topic you want to write blog/post
+            about</span>
+    </div>
+    <div class="search-highlight">
+        <div class="search-block">
+            <span class="font-weight-bold">Enter the main keywords or keyphrases</span>
+            <span class="font-weight-bold">0 of 5</span>
+        </div>
+        <div class="pl-4 pr-4">
+            <span class="subtxt">These keywords will help us understand your article better. More keywords create better
+                headlines (2
+                is the minimum number)</span><br>
+                <input type="text" class="form-control" placeholder="Ex: Uses of Protien Shake, Bodybuilding,.....">
+        </div>
+    </div>
+    <div class="p-4">
+        <span class="font-weight-bold">Generated Headlines</span>
+    </div>
+</ng-template>
+
+<ng-template #contactTemplate>
+    <div> Contact Us ...</div>
+</ng-template>

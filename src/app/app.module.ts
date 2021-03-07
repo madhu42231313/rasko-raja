@@ -8,6 +8,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AngularEditorModule } from '@kolkov/angular-editor';
+import { SidebarComponent } from './sidebar/sidebar.component';
+import { HomeComponent } from './home/home.component';
 declare module "@angular/core" {
   interface ModuleWithProviders<T = any> {
     ngModule: Type<T>;
@@ -18,7 +20,9 @@ declare module "@angular/core" {
 @NgModule({
   declarations: [
     AppComponent,
-    Gpt3Component
+    Gpt3Component,
+    SidebarComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
