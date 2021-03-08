@@ -33,3 +33,31 @@
     justify-content: space-between;
     padding: 0 1.5rem;
 }
+.main-box{
+    min-width: 95%;
+    min-height: 95%;
+}
+.headlines-list {
+    list-style: none;
+    padding-left: 0;
+    padding: 10px;
+}
+.headlines-list > li {
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.li-selected {
+    background: rgb(109, 84, 148);
+    color: white;
+}
+.header-list-item{
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: #413294;
+    color: white;
+}
+.great{
+    color: #e08231;
+}

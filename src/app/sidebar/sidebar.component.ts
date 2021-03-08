@@ -16,12 +16,12 @@ export class SidebarComponent implements OnInit {
       name: 'home',
       selected: true
     },
-    {
-      displayName: 'Contact Us',
-      icon: 'fa fa-address-book fa-2x',
-      name: 'contact',
-      selected: false
-    }
+    // {
+    //   displayName: 'Contact Us',
+    //   icon: 'fa fa-address-book fa-2x',
+    //   name: 'contact',
+    //   selected: false
+    // }
   ]
 
   constructor() { }
