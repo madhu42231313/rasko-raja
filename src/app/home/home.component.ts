@@ -5,7 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PromptUtilities } from "src/app/gpt3/utilities/promptUtilities"
 import { optionObject } from "src/app/gpt3/utilities/promptUtilities"
 import { AngularEditorConfig } from '@kolkov/angular-editor';
-
+import * as crypto from 'crypto-js';
 
 @Component({
   selector: 'app-home',
@@ -160,7 +160,7 @@ export class HomeComponent implements OnInit {
   keyWordEnter = () => {
     let keywordList = this.headlineObject.keywords.split(',')
                       .filter((e:string) => {return e && e.length})
-    console.log('keywordList ',keywordList)
+    // console.log('keywordList ',keywordList)
     this.headlineObject.inputList = keywordList
   }
   validateKeywords = () => {
@@ -599,7 +599,7 @@ export class HomeComponent implements OnInit {
 
   hitOpenAI = (options: any): Observable<any> => {
     this.prompt = options['prompt']
-    let url = this.completionUrl;
+    // let url = this.completionUrl;
     const headers = new HttpHeaders(
       {
         'Authorization': `Bearer ${this.finalOptions.key}`,
@@ -607,7 +607,13 @@ export class HomeComponent implements OnInit {
       }
     )
 
-    return this.http.post(url, options, { headers: headers })
+    let apiURL = "http://localhost:7788/api/"
+    let url = apiURL + "fetch"
+    let encryptedOptions = crypto.AES.encrypt(JSON.stringify(options), 'P@$$wordRASKOR@J@')
+    let reqOptions = {"reqOptions": encryptedOptions.toString()}
+    console.log('encrypted ', reqOptions)
+    // return this.http.post(url, options, { headers: headers })
+    return this.http.post(url, reqOptions)
 
   }
 }

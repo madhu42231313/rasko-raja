@@ -589,15 +589,18 @@ copyObject = {
 
   hitOpenAI = (options:any) :Observable<any> => {
     this.prompt = options['prompt']
-    let url = this.completionUrl;
-    const headers = new HttpHeaders(
-      {
-          'Authorization': `Bearer ${this.finalOptions.key}`,
-          'Content-Type': 'application/json'
-      }
-    ) 
+    // let url = this.completionUrl;
+    let apiURL = "http://localhost:7788/api/"
+    let url = apiURL + "fetch"
+    // const headers = new HttpHeaders(
+    //   {
+    //       'Authorization': `Bearer ${this.finalOptions.key}`,
+    //       'Content-Type': 'application/json'
+    //   }
+    // ) 
 
-    return this.http.post(url,options, {headers: headers})
+    // return this.http.post(url,options, {headers: headers})
+    return this.http.post(url,options)
 
   }
 
