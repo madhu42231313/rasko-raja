@@ -1,11 +1,11 @@
-<div class="d-flex vh-100">
+<div class="container-fluid vh-100">
     <div class="row">
-        <div class="col-4">
+        <div class="col-md-3 position-fixed p-0">
             <div class="sidebar">
                 <app-sidebar (selectedItemEvent)="selectedItem($event)"></app-sidebar>
             </div>
         </div>
-        <div class="col-8">
+        <div class="col-md-9 offset-3 p-0">
             <div class="main-content">
                 <div class='main-content-box main-box' [ngSwitch]="selectedItemName">
                     <div *ngSwitchCase="'home'">
@@ -64,23 +64,22 @@
             <span class="font-weight-bold">Generated Headlines</span>
         </div>
         <div class="p-3" *ngIf="headlineObject.generatedHeadlines.length">
-            <div *ngFor="let headline of headlineObject.generatedHeadlines;let i = index">
+            <!-- <div *ngFor="let headline of headlineObject.generatedHeadlines;let i = index">
                 <ul class="headlines-list">
                     <div class="row" *ngIf="i % 2 == 0">
                         <div class="col-6">
-                            <li class="d-flex align-items-center h-item" [ngClass]="{'li-selected': headline.selected}"
+                            <li class="d-flex align-items-center h-item" [ngClass]="{'li-selected': headline.checked}"
                                 (click)="onChecked(i)">
-                                <!-- <i [class]="item.icon"></i> -->
                                 <input class="" type="checkbox" [checked]="headline.checked" />
                                 <span class="pl-3"> {{i+1}} {{headline?.text}}
                                 </span>
                             </li>
                         </div>
                         <div class="col-6" *ngIf="i + 1 < headlineObject.generatedHeadlines.length">
-                            <li class="d-flex align-items-center h-item" [ngClass]="{'li-selected': headline.selected}"
+                            <li class="d-flex align-items-center h-item" [ngClass]="{'li-selected': headlineObject.generatedHeadlines[i+1].checked}"
                                 (click)="onChecked(i+1)">
-                                <!-- (click)="listSelected(item)" -->
-                                <!-- <i [class]="item.icon"></i> -->
+                                 (click)="listSelected(item)"
+                                 <i [class]="item.icon"></i> 
                                 <input class="" type="checkbox"
                                     [checked]="headlineObject.generatedHeadlines[i+1].checked" />
                                 <span class="pl-3 "> {{i+2}} {{headlineObject.generatedHeadlines[i+1].text}}
@@ -89,6 +88,23 @@
                         </div>
                     </div>
                 </ul>
+            </div> -->
+            <div class="row">
+                <div class="col-sm-6 mb-2" *ngFor="let headline of headlineObject.generatedHeadlines;let i = index">
+                    <div class="card align-items-center h-item">
+                        <div class="card-body">
+                            <div class="form-check-inline">
+                                <label class="form-check-label" for="check1">
+                                    <input type="checkbox" class="form-check-input" id="check1" name="vehicle1" value="something" [checked]="headline.checked">
+                                    <span class="pl-3"> {{i+1}} {{headline?.text}} </span>
+                                </label>
+                            </div>
+                            <!-- <input class="" type="checkbox" [checked]="headline.checked" /> -->
+                            <!-- <span class="pl-3"> {{i+1}} {{headline?.text}}
+                            </span> -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">
