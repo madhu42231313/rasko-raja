@@ -122,7 +122,7 @@ headlines = [
     editable: true,
     spellcheck: true,
     height: 'auto',
-    minHeight: '100',
+    minHeight: '500px',
     maxHeight: 'auto',
     width: 'auto',
     minWidth: 'auto',
@@ -158,7 +158,22 @@ headlines = [
     uploadWithCredentials: false,
     sanitize: true,
     toolbarPosition: 'top',
-    toolbarHiddenButtons: []
+    toolbarHiddenButtons: [
+      ['insertImage', 'insertVideo', ],
+      // [
+      //   'fontSize',
+      //   'textColor',
+      //   'backgroundColor',
+      //   'customClasses',
+      //   'link',
+      //   'unlink',
+      //   'insertImage',
+      //   'insertVideo',
+      //   'insertHorizontalRule',
+      //   'removeFormat',
+      //   'toggleEditorMode'
+      // ]
+    ]
   };
   copyObject = {
     spin: false,
@@ -167,7 +182,7 @@ headlines = [
   }
   ngOnInit(): void {
     // this.updateViewComp('copy')
-    this.headlineObject.generatedHeadlines = this.headlines
+    // this.headlineObject.generatedHeadlines = this.headlines
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {
         this.doAction()
@@ -383,12 +398,11 @@ headlines = [
   continueToCopy = () => {
     let headline = this.headlineObject.selectedHeadlines[0].text
     let intro = this.introObject.selectedIntros[0].text
-    let desc = this.introObject.description
-    let originalText = `${headline} \n\n ${desc} \n ${intro} \n`;
+    // let desc = this.introObject.description
+    let originalText = `${headline} \n\n ${intro} \n`;
     this.copyObject.textContent = originalText;
     let editorString = `<h2> ${headline} </h2> 
-                        <br><br> 
-                        <h3> ${desc} </h3>
+                        <br><br>
                         <br>
                         <p> ${intro} </p> <br>`
     this.editorContent = editorString;
@@ -570,7 +584,7 @@ headlines = [
       this.headlineObject.spin = false
       if (response && response.choices) {
         let choices = response.choices[0].text && response.choices[0].text.split('\n')
-          .filter((e: string) => { return e.length })
+          .filter((e: string) => { return e.length > 3 })
         //  console.log('before map --> ',choices)
         choices = choices.map((head: string) => {
           let splitArray = head.split('.')
@@ -615,7 +629,7 @@ headlines = [
 
   hitOpenAI = (options: any): Observable<any> => {
     this.prompt = options['prompt']
-    // let url = this.completionUrl;
+    let url = this.completionUrl;
     const headers = new HttpHeaders(
       {
         'Authorization': `Bearer ${this.finalOptions.key}`,
@@ -623,13 +637,13 @@ headlines = [
       }
     )
 
-    let apiURL = "http://localhost:7788/api/"
-    let url = apiURL + "fetch"
+    // let apiURL = "http://localhost:7788/api/"
+    // let url = apiURL + "fetch"
     let encryptedOptions = crypto.AES.encrypt(JSON.stringify(options), 'P@$$wordRASKOR@J@')
     let reqOptions = {"reqOptions": encryptedOptions.toString()}
     console.log('encrypted ', reqOptions)
-    // return this.http.post(url, options, { headers: headers })
-    return this.http.post(url, reqOptions)
+    return this.http.post(url, options, { headers: headers })
+    // return this.http.post(url, reqOptions)
 
   }
 }
