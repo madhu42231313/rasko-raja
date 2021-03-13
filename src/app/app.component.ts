@@ -11,6 +11,7 @@ export class AppComponent {
   title = 'rasko-raja';
   status = 'ONLINE';
   isConnected = true;
+  
 
   // constructor(private connectionService: ConnectionService) {
   //   this.connectionService.monitor().subscribe(isConnected => {

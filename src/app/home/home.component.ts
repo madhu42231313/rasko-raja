@@ -24,6 +24,21 @@ export class HomeComponent implements OnInit {
     this.selectedItemName = name;
   }
 
+  // TEST
+headlines = [
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.Lorem Ipsum is simply dummy text of the printing and typesetting industry.Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+  {text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',checked: false},
+]
+  // TEST 
+
   subject: Subject<any> = new Subject();
   key: string = 'sk-gnpHgNlj1nyLOIPUJShUjPkllzh19Tktx3e6eHpV'
   prompt: string = ''
@@ -152,6 +167,7 @@ export class HomeComponent implements OnInit {
   }
   ngOnInit(): void {
     // this.updateViewComp('copy')
+    this.headlineObject.generatedHeadlines = this.headlines
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {
         this.doAction()
