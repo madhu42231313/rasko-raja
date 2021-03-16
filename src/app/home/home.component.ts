@@ -102,7 +102,8 @@ headlines = [
     keyWordErr: false,
     keywordErrMsg: "",
     showContinue: false,
-    inputList: []
+    inputList: [],
+    filteredList: []
   }
   introObject: any = {
     description: "",
@@ -222,6 +223,12 @@ headlines = [
     this.introObject.generatedIntros = introList
     this.detectChanges()
   }
+  renderHealineList = (headlineList: optionObject[]) => {
+    this.headlineObject.spin = false;
+    this.headlineObject.generatedHeadlines = headlineList
+    this.detectChanges()
+  }
+  
   performIntroGen = (prompt: string) => {
     // Generate Intros first
     this.generateIntro(prompt)
@@ -326,6 +333,22 @@ headlines = [
         }
       } else {
         this.onGenerateIntro('NEW')
+      }
+    })
+  }
+  validateGeneratedHeadlines = (generatedHeadlines: optionObject[]) => {
+    return new Promise((resolve, reject) => {
+      if (generatedHeadlines && generatedHeadlines.length) {
+        // let isValid = true
+        let minLen = 10
+        let filterWithLength = generatedHeadlines.filter((i) => { return i.text.length >= minLen })
+        if (filterWithLength.length) {
+          resolve(filterWithLength)
+        } else {
+          resolve([])
+        }
+      } else {
+        this.onGenrateHeadline('NEW')
       }
     })
   }
@@ -559,7 +582,7 @@ headlines = [
           this.initialHeadlinePrompt = promptText;
           promptText = promptText + '\n 1.'
           console.log('prompt ', promptText)
-          this.generateHeadlines(promptText)
+          this.performHeadlineGen(promptText)
         }
       }
       else if (type == 'MORE') {
@@ -570,42 +593,76 @@ headlines = [
           promptText = promptText + '\n' + sNo + '. ' + h.text
         })
         console.log('promptt ', promptText)
-        // this.generateHeadlines(promptText)
+        this.performHeadlineGen(promptText)
       }
     }
   }
 
-  generateHeadlines = (promptText: string) => {
-    let options = this.getConfigOptions('HEADLINE')
-    options['prompt'] = promptText
-    if (this.apiCallSubscribe) { this.apiCallSubscribe.unsubscribe(); }
-    this.apiCallSubscribe = this.hitOpenAI(options).subscribe((response: any) => {
-      console.log('headlines response ', response)
-      this.headlineObject.spin = false
-      if (response && response.choices) {
-        let choices = response.choices[0].text && response.choices[0].text.split('\n')
-          .filter((e: string) => { return e.length > 3 })
-        //  console.log('before map --> ',choices)
-        choices = choices.map((head: string) => {
-          let splitArray = head.split('.')
-          return splitArray.length > 1 ? splitArray[1] : splitArray[0]
-        })
-        //  console.log('after map --> ',choices)
-        choices.forEach((e: any, index: number) => {
-          if (e.length) {
-            let headline: any = {
-              text: e,
-              checked: false
+  performHeadlineGen = (prompt : string) =>{
+    this.generateHeadlines(prompt)
+    .then((res:any)=>{
+      this.validateGeneratedHeadlines(res)
+      .then((validatedRes: any)=>{
+        let headlineList: optionObject[] = this.headlineObject.filteredList
+            if (validatedRes && validatedRes.length) {
+              headlineList = headlineList.concat(validatedRes)
+              this.headlineObject.filteredList = [...headlineList]
             }
-            this.headlineObject.generatedHeadlines.push(headline)
-          }
-        })
-        console.log('headlineObject => ', this.headlineObject)
-        this.detectChanges();
-      }
-    }, (error) => {
-      console.log('error in generateHeadlines ', error)
+            if (headlineList.length >= 2) {
+              this.renderHealineList(headlineList)
+            } else {
+              this.onGenrateHeadline('NEW')
+            }
+      })
+      .catch(err=>{
+        this.headlineObject.spin = false
+        console.log(err)
+      })
+
+    })
+    .catch(e => {
       this.headlineObject.spin = false
+      console.log(e)
+    })
+  }
+
+  generateHeadlines = (promptText: string) => {
+    return new Promise((resolve , reject)=>{
+      let options = this.getConfigOptions('HEADLINE')
+      options['prompt'] = promptText
+      let generatedHeadlines: optionObject[] = []
+      if (this.apiCallSubscribe) { this.apiCallSubscribe.unsubscribe(); }
+      this.apiCallSubscribe = this.hitOpenAI(options).subscribe((response: any) => {
+        console.log('headlines response ', response)
+        this.headlineObject.spin = false
+        if (response && response.choices) {
+          let choices = response.choices[0].text && response.choices[0].text.split('\n')
+            .filter((e: string) => { return e.length > 3 })
+          //  console.log('before map --> ',choices)
+          choices = choices.map((head: string) => {
+            let splitArray = head.split('.')
+            return splitArray.length > 1 ? splitArray[1] : splitArray[0]
+          })
+          //  console.log('after map --> ',choices)
+          choices.forEach((e: any, index: number) => {
+            if (e.length) {
+              let headline: any = {
+                text: e,
+                checked: false
+              }
+              generatedHeadlines.push(headline)
+            }
+          })
+          // console.log('headlineObject => ', this.headlineObject)
+          resolve(generatedHeadlines)
+          // this.detectChanges();
+        }
+      }, (error) => {
+        console.log('error in generateHeadlines ', error)
+        this.headlineObject.spin = false
+        resolve([])
+      })
+
     })
   }
 
