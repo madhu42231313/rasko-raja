@@ -160,7 +160,9 @@ headlines = [
     sanitize: true,
     toolbarPosition: 'top',
     toolbarHiddenButtons: [
-      ['insertImage', 'insertVideo', ],
+      ['insertImage', 'insertVideo','undo',
+      'redo','strikeThrough','subscript',
+      'superscript', 'fontName','customClasses','insertHorizontalRule','removeFormat', 'unlink', ],
       // [
       //   'fontSize',
       //   'textColor',
@@ -182,7 +184,7 @@ headlines = [
     textContent: ""
   }
   ngOnInit(): void {
-    // this.updateViewComp('copy')
+    this.updateViewComp('copy')
     // this.headlineObject.generatedHeadlines = this.headlines
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {

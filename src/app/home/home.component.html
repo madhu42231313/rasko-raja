@@ -1,7 +1,7 @@
 <div class="container-fluid vh-100">
     <div class="row">
         <div class="col-3 col-md-3 position-fixed p-0 sidebar">
-            <div class="">
+            <div class="" *ngIf="viewComp != 'copy'">
                 <app-sidebar (selectedItemEvent)="selectedItem($event)"></app-sidebar>
             </div>
         </div>
