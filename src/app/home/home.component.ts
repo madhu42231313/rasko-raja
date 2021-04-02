@@ -205,9 +205,13 @@ headlines = [
     angularEditorWrapper.removeChild(defaultPlaceholderSpan); //Removing defaultPlaceholderSpan from angularEditorWrapper.
     setTimeout(() => {
       angularEditorWrapper.childNodes[0].appendChild(defaultPlaceholderSpan); //Adding defaultPlaceholderSpan inside Editor box.
-      let overview = new DOMParser().parseFromString('<div style="min-height: 500px;height: auto;width: 25%;"><b (click)="test()">Hello!</b></div>', 'text/html');
+      let overview = new DOMParser().parseFromString('<div style="min-height: 500px;height: auto;width: 25%;"><b (click)="this.test()">Hello!</b></div>', 'text/html');
       let overviewNode = overview.childNodes[0].childNodes[1].childNodes[0] 
       angularEditorWrapper.prepend(overviewNode);
+      let boldElement = overviewNode.childNodes[0]; 
+      boldElement.addEventListener('click', ()=> {
+        this.test();
+      })
     }, 1000);
   }
 
