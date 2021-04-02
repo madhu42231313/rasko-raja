@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -12,7 +12,7 @@ import * as crypto from 'crypto-js';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit {
 
   selectedItemName: string = 'home';
 
@@ -183,6 +183,9 @@ headlines = [
     viewContent: "",
     textContent: ""
   }
+
+  @ViewChild('angularEditor', {read: ElementRef}) angularEditor: any;
+
   ngOnInit(): void {
     this.updateViewComp('copy')
     // this.headlineObject.generatedHeadlines = this.headlines
@@ -191,6 +194,28 @@ headlines = [
         this.doAction()
       })
   }
+
+  ngAfterViewInit(): void {
+    this.formatDocumentDOM()
+  }
+
+  formatDocumentDOM() {
+    let angularEditorWrapper = this.angularEditor.nativeElement.childNodes[0].childNodes[2];
+    let defaultPlaceholderSpan = angularEditorWrapper.childNodes[1];
+    angularEditorWrapper.removeChild(defaultPlaceholderSpan); //Removing defaultPlaceholderSpan from angularEditorWrapper.
+    setTimeout(() => {
+      angularEditorWrapper.childNodes[0].appendChild(defaultPlaceholderSpan); //Adding defaultPlaceholderSpan inside Editor box.
+      let overview = new DOMParser().parseFromString('<div style="min-height: 500px;height: auto;width: 25%;"><b (click)="test()">Hello!</b></div>', 'text/html');
+      let overviewNode = overview.childNodes[0].childNodes[1].childNodes[0] 
+      angularEditorWrapper.prepend(overviewNode);
+    }, 1000);
+  }
+
+  test() {
+    alert("jhi");
+  }
+
+
   keyWordEnter = () => {
     let keywordList = this.headlineObject.keywords.split(',')
                       .filter((e:string) => {return e && e.length})
