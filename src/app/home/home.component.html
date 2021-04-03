@@ -167,7 +167,7 @@
 <ng-template #copyTemplate>
     <div class="row p-3">
         <div class="col-9">
-            <angular-editor  [placeholder]="'Enter text here...'" [config]="editorConfig" [(ngModel)]="editorContent">
+            <angular-editor  [placeholder]="'Enter text here...'" (keyup)="onKeyUp($event)" [config]="editorConfig" [(ngModel)]="editorContent">
             </angular-editor>
         </div>
     </div>

@@ -6,6 +6,7 @@ import { PromptUtilities } from "src/app/gpt3/utilities/promptUtilities"
 import { optionObject } from "src/app/gpt3/utilities/promptUtilities"
 import { AngularEditorConfig } from '@kolkov/angular-editor';
 import * as crypto from 'crypto-js';
+import * as writegood from 'write-good'
 
 @Component({
   selector: 'app-home',
@@ -188,9 +189,32 @@ headlines = [
     // this.headlineObject.generatedHeadlines = this.headlines
     this.subject.pipe(debounceTime(1500))
       .subscribe((event: any) => {
-        this.doAction()
+        this.analyseText()
       })
   }
+  analyseText = () => {
+    console.log("analyse text")
+    this.copyObject.viewContent = this.editorContent
+    let inputText: string = this.editorContent
+    inputText = this.removeHtmlTags(inputText)
+    inputText = inputText.trim();
+    let suggestions = writegood(this.editorContent)
+    console.log("suggestions ",suggestions)
+    if(suggestions && suggestions.length){
+      this.updateEditorWithSuggestions(suggestions)
+    }
+  }
+
+  updateEditorWithSuggestions = (suggestions: any) => {
+    if(suggestions && suggestions.length){
+      for(let i=0; i<suggestions.length; i++){
+        let suggestionObj = suggestions[i]
+        let word = this.editorContent[suggestionObj.index]
+        let replaceElemet = `<span></span>`
+      }
+    }
+  }
+
   keyWordEnter = () => {
     let keywordList = this.headlineObject.keywords.split(',')
                       .filter((e:string) => {return e && e.length})
@@ -359,7 +383,8 @@ headlines = [
   }
 
   onKeyUp(event: any) {
-    if (this.apiCallSubscribe) { this.apiCallSubscribe.unsubscribe() }
+    // console.log("on key up --> ",event)
+    // if (this.apiCallSubscribe) { this.apiCallSubscribe.unsubscribe() }
     this.subject.next(event);
   }
   onCopySubmit = () => {

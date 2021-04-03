@@ -1,0 +1,1 @@
+import * as WriteGood from 'write-good'
