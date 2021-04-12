@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { debounceTime, } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -13,7 +13,7 @@ import * as writegood from 'write-good'
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit {
 
   selectedItemName: string = 'home';
 
@@ -182,12 +182,17 @@ headlines = [
   copyObject = {
     spin: false,
     viewContent: "",
-    textContent: ""
+    textContent: "",
+    prevViewContent: "",
+    replacedList:[]
   }
+
+  @ViewChild('angularEditor', {read: ElementRef}) angularEditor: any;
+
   ngOnInit(): void {
-    this.updateViewComp('copy')
+    // this.updateViewComp('copy')
     // this.headlineObject.generatedHeadlines = this.headlines
-    this.subject.pipe(debounceTime(1500))
+    this.subject.pipe(debounceTime(2000))
       .subscribe((event: any) => {
         this.analyseText()
       })
@@ -195,25 +200,71 @@ headlines = [
   analyseText = () => {
     console.log("analyse text")
     this.copyObject.viewContent = this.editorContent
-    let inputText: string = this.editorContent
-    inputText = this.removeHtmlTags(inputText)
-    inputText = inputText.trim();
-    let suggestions = writegood(this.editorContent)
-    console.log("suggestions ",suggestions)
-    if(suggestions && suggestions.length){
-      this.updateEditorWithSuggestions(suggestions)
-    }
-  }
-
-  updateEditorWithSuggestions = (suggestions: any) => {
-    if(suggestions && suggestions.length){
-      for(let i=0; i<suggestions.length; i++){
-        let suggestionObj = suggestions[i]
-        let word = this.editorContent[suggestionObj.index]
-        let replaceElemet = `<span></span>`
+    // let inputText: string = this.editorContent
+    // inputText = this.removeHtmlTags(inputText)
+    // inputText = inputText.trim();
+    if(this.editorContent.trim().length != this.copyObject.prevViewContent.trim().length){
+      let suggestions = writegood(this.editorContent)
+      console.log("suggestions ",suggestions)
+      if(suggestions && suggestions.length){
+        this.updateEditorWithSuggestions(suggestions)
       }
     }
   }
+
+  replaceAll = (text: string, search: string, replace: string) => {
+    return text.split(search).join(replace);
+  }
+  updateEditorWithSuggestions = (suggestions: any) => {
+    let replaceObj: any = {}
+    if(suggestions && suggestions.length){
+      this.copyObject.prevViewContent = this.editorContent
+      for(let i=0; i<suggestions.length; i++){
+        let suggestionObj = suggestions[i]
+        console.log("suggestions ",suggestionObj)
+        let word = this.editorContent.substr(suggestionObj.index, suggestionObj.offset)
+        let reason = this.replaceAll(suggestionObj.reason, '"','')
+        let replaceElemet = `<span title="${reason}" style="text-decoration: underline;">${word}</span>`
+        replaceObj[word] = {e: replaceElemet, index: suggestionObj.index } 
+        // this.editorContent = this.editorContent.replace(word, replaceElemet)
+        // console.log("---> ",word, replaceElemet)
+      }
+      console.log("replace object ",replaceObj)
+      for(let i in replaceObj){
+        console.log("replace loop ",replaceObj[i], this.editorContent[replaceObj[i].index - 1])
+        if( this.editorContent[replaceObj[i].index - 1] != '>')
+          this.editorContent = this.replaceAll(this.editorContent, i, replaceObj[i].e)
+      }
+      this.copyObject.viewContent = this.editorContent
+      this.detectChanges()
+    }
+  }
+
+
+  ngAfterViewInit(): void {
+    // this.formatDocumentDOM()
+  }
+
+  formatDocumentDOM() {
+    let angularEditorWrapper = this.angularEditor.nativeElement.childNodes[0].childNodes[2];
+    let defaultPlaceholderSpan = angularEditorWrapper.childNodes[1];
+    angularEditorWrapper.removeChild(defaultPlaceholderSpan); //Removing defaultPlaceholderSpan from angularEditorWrapper.
+    setTimeout(() => {
+      angularEditorWrapper.childNodes[0].appendChild(defaultPlaceholderSpan); //Adding defaultPlaceholderSpan inside Editor box.
+      let overview = new DOMParser().parseFromString('<div style="min-height: 500px;height: auto;width: 25%;"><b (click)="this.test()">Hello!</b></div>', 'text/html');
+      let overviewNode = overview.childNodes[0].childNodes[1].childNodes[0] 
+      angularEditorWrapper.prepend(overviewNode);
+      let boldElement = overviewNode.childNodes[0]; 
+      boldElement.addEventListener('click', ()=> {
+        this.test();
+      })
+    }, 1000);
+  }
+
+  test() {
+    alert("jhi");
+  }
+
 
   keyWordEnter = () => {
     let keywordList = this.headlineObject.keywords.split(',')
@@ -476,9 +527,7 @@ headlines = [
     console.log('formatted string ', formattedStr)
     return formattedStr;
   }
-  replaceAll = (string: string, search: string, replace: string) => {
-    return string.split(search).join(replace);
-  }
+
 
   doAction(): void {
 

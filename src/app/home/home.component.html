@@ -1,5 +1,5 @@
 <div class="container-fluid vh-100">
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-3 col-md-3 position-fixed p-0 sidebar">
             <div class="" *ngIf="viewComp != 'copy'">
                 <app-sidebar (selectedItemEvent)="selectedItem($event)"></app-sidebar>
@@ -24,7 +24,26 @@
                 </div>
             </div>
         </div>
+    </div> -->
+
+    <div class="main-content">
+        <div class='main-content-box main-box' [ngSwitch]="selectedItemName">
+            <div *ngSwitchCase="'home'">
+                <ng-container *ngTemplateOutlet="homeTemplate">
+                </ng-container>
+            </div>
+            <div *ngSwitchCase="'intro'">
+                <ng-container *ngTemplateOutlet="introTemplate">
+                </ng-container>
+            </div>
+            <div *ngSwitchCase="'copy'">
+                <ng-container *ngTemplateOutlet="copyTemplate">
+                </ng-container>
+            </div>
+            <div *ngSwitchDefault>Please select one from list.</div>
+        </div>
     </div>
+
 </div>
 
 <ng-template #homeTemplate>
@@ -165,14 +184,15 @@
 </ng-template>
 
 <ng-template #copyTemplate>
-    <div class="row p-3">
-        <div class="col-9">
-            <angular-editor  [placeholder]="'Enter text here...'" (keyup)="onKeyUp($event)" [config]="editorConfig" [(ngModel)]="editorContent">
-            </angular-editor>
+    <div>
+        <div class="overview">
+            Document Header
         </div>
+        <angular-editor #angularEditor [placeholder]="'Enter text here...'" (keyup)="onKeyUp($event)"  [config]="editorConfig" [(ngModel)]="editorContent">
+        </angular-editor>
     </div>
     <div class="row p-5">
-        <button class="btn btn-primary margin-left-15" (click)="onCopySubmit()" [disabled]="copyObject.spin" >
+        <button class="btn btn-primary margin-left-15" (click)="onCopySubmit()" [disabled]="copyObject.spin">
             <span *ngIf="!copyObject.spin">Submit</span>
             <span *ngIf="copyObject.spin">Generating..</span>
         </button>
